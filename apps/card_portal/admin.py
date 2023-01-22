@@ -3,6 +3,49 @@ from django.contrib import admin
 from apps.card_portal.models import Employees, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
 
 
+class EmployeesImageAdminInline(admin.TabularInline):
+    fk_name = "employee"
+    model = EmployeesImage
+    readonly_fields = ('image_tag',)
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 0
+        if obj:
+            return extra
+        return extra
+
+
+class EmployeesDesignationAdminInline(admin.TabularInline):
+    fk_name = "employee"
+    model = EmployeesDesignation
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 0
+        if obj:
+            return extra
+        return extra
+
+
+class EmployeesDailyAttendanceAdminInline(admin.TabularInline):
+    fk_name = "employee"
+    model = EmployeesDailyAttendance
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 0
+        if obj:
+            return extra
+        return extra
+
+    def has_add_permission(self, request, obj):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Employees)
 class EmployeesAdmin(admin.ModelAdmin):
     list_display = (
@@ -14,6 +57,7 @@ class EmployeesAdmin(admin.ModelAdmin):
     search_fields = (
         'first_name', 'last_name', 'email', 'phone_number', 'address', 'district', 'division', 'post_code',
         'rdf_number', 'dob')
+    inlines = [EmployeesImageAdminInline, EmployeesDesignationAdminInline, EmployeesDailyAttendanceAdminInline]
 
 
 @admin.register(EmployeesDesignation)
@@ -32,7 +76,6 @@ class EmployeesDesignationAdmin(admin.ModelAdmin):
 
 @admin.register(EmployeesImage)
 class EmployeesImageAdmin(admin.ModelAdmin):
-
     list_display = ('employee', 'image', 'image_tag')
     list_filter = ('employee__first_name', 'employee__last_name', 'employee__email',)
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__email',)
