@@ -1,5 +1,7 @@
 from django.db import models
+from django.utils.safestring import mark_safe
 
+from config.settings import MEDIA_ROOT
 from utils.mixins import BaseModelMixin
 
 
@@ -45,6 +47,28 @@ class EmployeesImage(BaseModelMixin):
     employee = models.ForeignKey(Employees, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="employees/images/")
 
+    def image_tag(self):
+        return mark_safe(f'<img src="{self.image.url}" width="80" height="80" />')
+
+    image_tag.short_description = 'Image View'
+    image_tag.allow_tags = True
+
     def __str__(self):
         return "ID: " + str(self.id) + ", EMPLOYEE_ID: " + str(
             self.employee.id) + ", IMAGE: " + self.image.name
+
+
+class EmployeesDailyAttendance(BaseModelMixin):
+    """
+    Employees daily attendance model
+    """
+    employee = models.ForeignKey(Employees, on_delete=models.CASCADE)
+    date = models.DateField()
+    in_time = models.TimeField()
+    out_time = models.TimeField(null=True, blank=True)
+    is_present = models.BooleanField(default=True)
+
+    def __str__(self):
+        return "ID: " + str(self.id) + ", EMPLOYEE_ID: " + str(
+            self.employee.id) + ", DATE: " + str(self.date) + ", IS_PRESENT: " + str(
+            self.is_present)

@@ -1,8 +1,58 @@
 from django.contrib import admin
 
-from apps.card_portal.models import Employees, EmployeesDesignation, EmployeesImage
+from apps.card_portal.models import Employees, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
 
-# Register your models here.
-admin.site.register(Employees)
-admin.site.register(EmployeesDesignation)
-admin.site.register(EmployeesImage)
+
+@admin.register(Employees)
+class EmployeesAdmin(admin.ModelAdmin):
+    list_display = (
+        'first_name', 'last_name', 'email', 'phone_number', 'address', 'district', 'division', 'post_code',
+        'rdf_number', 'dob')
+    list_filter = (
+        'first_name', 'last_name', 'email', 'district', 'division', 'post_code',
+        'rdf_number', 'dob')
+    search_fields = (
+        'first_name', 'last_name', 'email', 'phone_number', 'address', 'district', 'division', 'post_code',
+        'rdf_number', 'dob')
+
+
+@admin.register(EmployeesDesignation)
+class EmployeesDesignationAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'designation', 'start_date', 'end_date', 'is_active')
+    list_filter = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'designation', 'start_date', 'end_date',
+        'is_active'
+    )
+    search_fields = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'designation', 'start_date', 'end_date',
+        'is_active'
+    )
+    readonly_fields = ('employee',)
+
+
+@admin.register(EmployeesImage)
+class EmployeesImageAdmin(admin.ModelAdmin):
+
+    list_display = ('employee', 'image', 'image_tag')
+    list_filter = ('employee__first_name', 'employee__last_name', 'employee__email',)
+    search_fields = ('employee__first_name', 'employee__last_name', 'employee__email',)
+    readonly_fields = ('image_tag', 'employee',)
+
+
+@admin.register(EmployeesDailyAttendance)
+class EmployeesDailyAttendanceAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'date', 'in_time', 'out_time', 'is_present')
+    list_filter = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time', 'is_present'
+    )
+    search_fields = ('employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time')
+    readonly_fields = ('created_at', 'updated_at', 'date', 'in_time', 'out_time', 'employee', 'is_present', "employee")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

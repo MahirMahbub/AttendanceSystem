@@ -1,1 +1,1 @@
-from .employees import Employees, EmployeesDesignation, EmployeesImage
+from .employees import Employees, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
