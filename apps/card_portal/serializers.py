@@ -28,7 +28,9 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):
             check_out = validated_data.pop('check_out', None)
             if last_attendance.in_time is not None and last_attendance.out_time is not None:
                 if check_out is not None:
-                    raise serializers.ValidationError("Check-in should be done first")
+                    response = serializers.ValidationError({"message": "Check-in should be done first"})
+                    response.status_code = status.HTTP_201_CREATED
+                    raise response
                 if check_in is not None:
                     validated_data['is_present'] = True
                     validated_data['in_time'] = check_in
@@ -42,15 +44,17 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):
                 if last_attendance.out_time is None:
                     # validated_data['out_time'] = check_out
                     if last_attendance.in_time >= check_out:
-                        raise serializers.ValidationError("Check-out time must be greater than check-in time")
+                        raise serializers.ValidationError(
+                            {"message": "Check-out time must be greater than check-in time"})
                     last_attendance.out_time = check_out
                     last_attendance.save()
                     return last_attendance
                 else:
-                    raise serializers.ValidationError("Check-out already done", code=status.HTTP_201_CREATED)
+                    raise serializers.ValidationError({"message": "Check-out already done"},
+                                                      code=status.HTTP_201_CREATED)
         else:
             if validated_data.get('check_in') is None:
-                raise serializers.ValidationError("Check-in is required")
+                raise serializers.ValidationError({"message": "Check-in is required"})
             rdf = validated_data.pop('rdf')
             validated_data['is_present'] = True
             validated_data['in_time'] = validated_data.pop('check_in')
