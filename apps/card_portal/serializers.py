@@ -39,10 +39,11 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
                     return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:
-                    raise serializers.ValidationError("Check-in already done")
+                    response = serializers.ValidationError({"message": "Check-in already done"})
+                    response.status_code = status.HTTP_201_CREATED
+                    raise response
             if check_out is not None:
                 if last_attendance.out_time is None:
-                    # validated_data['out_time'] = check_out
                     if last_attendance.in_time >= check_out:
                         raise serializers.ValidationError(
                             {"message": "Check-out time must be greater than check-in time"})
@@ -50,8 +51,10 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
                     last_attendance.save()
                     return last_attendance
                 else:
-                    raise serializers.ValidationError({"message": "Check-out already done"},
+                    response = serializers.ValidationError({"message": "Check-out already done"},
                                                       code=status.HTTP_201_CREATED)
+                    response.status_code = status.HTTP_201_CREATED
+                    raise response
         else:
             if validated_data.get('check_in') is None:
                 raise serializers.ValidationError({"message": "Check-in is required"})
