@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.safestring import mark_safe
 
-from config.settings import MEDIA_ROOT
 from utils.mixins import BaseModelMixin
 
 
@@ -24,7 +23,6 @@ class Employees(BaseModelMixin):
         return EmployeesImage.objects.filter(employee=self)
 
     images.short_description = 'Images'
-    images
 
     def __str__(self):
         return "ID: " + str(self.id) + ", NAME: " + self.first_name + " " + self.last_name + ", EMAIL: " + self.email
