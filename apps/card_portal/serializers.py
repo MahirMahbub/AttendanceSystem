@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from apps.card_portal.models import EmployeesDailyAttendance, Employees
 
 
-class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
+class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noqa
     rdf = serializers.IntegerField(required=True, help_text="RDF number of the employee")
     date = serializers.DateField(required=True, help_text="Date of the attendance")
     check_in = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
@@ -22,10 +22,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
             date=validated_data['date']
         ).last()
         if last_attendance is not None:
-            rdf = validated_data.pop('rdf')
-            date = validated_data.pop('date')
-            check_in = validated_data.pop('check_in', None)
-            check_out = validated_data.pop('check_out', None)
+            check_in, check_out, date, rdf = self._extract_attendance_data_from_validated_data(validated_data)
             if last_attendance.in_time is not None and last_attendance.out_time is not None:
                 if check_out is not None:
                     response = serializers.ValidationError({"message": "Check-in should be done first"})
@@ -52,17 +49,29 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
                     return last_attendance
                 else:
                     response = serializers.ValidationError({"message": "Check-out already done"},
-                                                      code=status.HTTP_201_CREATED)
+                                                           code=status.HTTP_201_CREATED)
                     response.status_code = status.HTTP_201_CREATED
                     raise response
         else:
             if validated_data.get('check_in') is None:
                 raise serializers.ValidationError({"message": "Check-in is required"})
             rdf = validated_data.pop('rdf')
-            validated_data['is_present'] = True
-            validated_data['in_time'] = validated_data.pop('check_in')
-            employee = Employees.objects.get(rdf_number=rdf)
-            return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
+            return self._create_employee(rdf, validated_data)
+
+    @staticmethod
+    def _extract_attendance_data_from_validated_data(validated_data):
+        rdf = validated_data.pop('rdf')
+        date = validated_data.pop('date')
+        check_in = validated_data.pop('check_in', None)
+        check_out = validated_data.pop('check_out', None)
+        return check_in, check_out, date, rdf
+
+    @staticmethod
+    def _create_employee(rdf, validated_data):
+        validated_data['is_present'] = True
+        validated_data['in_time'] = validated_data.pop('check_in')
+        employee = Employees.objects.get(rdf_number=rdf)
+        return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
 
     def to_representation(self, instance):
         serializer = EmployeesDailyAttendanceSerializer(instance)
@@ -75,5 +84,5 @@ class EmployeesDailyAttendanceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MessageSerializer(serializers.Serializer): # noqa
+class MessageSerializer(serializers.Serializer):  # noqa
     message = serializers.CharField(default="<some message>")
