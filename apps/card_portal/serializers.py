@@ -3,11 +3,11 @@ from rest_framework import serializers, status
 from apps.card_portal.models import EmployeesDailyAttendance, Employees
 
 
-class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):
-    rdf = serializers.IntegerField(required=True)
-    date = serializers.DateField(required=True)
-    check_in = serializers.TimeField(required=False, default=None)
-    check_out = serializers.TimeField(required=False, default=None)
+class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer): # noqa
+    rdf = serializers.IntegerField(required=True, help_text="RDF number of the employee")
+    date = serializers.DateField(required=True, help_text="Date of the attendance")
+    check_in = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
+    check_out = serializers.TimeField(required=False, default=None, help_text="Check out time of the employee")
 
     def validate(self, attrs):
         if attrs.get('check_in') is None and attrs.get('check_out') is None:
@@ -71,5 +71,6 @@ class EmployeesDailyAttendanceSerializer(serializers.ModelSerializer):
         model = EmployeesDailyAttendance
         fields = '__all__'
 
-class MessageSerializer(serializers.Serializer):
+
+class MessageSerializer(serializers.Serializer): # noqa
     message = serializers.CharField(default="<some message>")
