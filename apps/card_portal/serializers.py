@@ -70,3 +70,6 @@ class EmployeesDailyAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeesDailyAttendance
         fields = '__all__'
+
+class MessageSerializer(serializers.Serializer):
+    message = serializers.CharField(default="<some message>")
