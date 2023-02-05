@@ -71,6 +71,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         validated_data['is_present'] = True
         validated_data['in_time'] = validated_data.pop('check_in')
         employee = Employees.objects.get(rdf_number=rdf)
+        validated_data.pop('check_out')
         return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
 
     def to_representation(self, instance):
