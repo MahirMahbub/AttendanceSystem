@@ -1,10 +1,10 @@
 from rest_framework import serializers, status
 
-from apps.card_portal.models import EmployeesDailyAttendance, Employees
+from apps.card_portal.models import EmployeesDailyAttendance, Employee
 
 
 class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noqa
-    rdf = serializers.IntegerField(required=True, help_text="RDF number of the employee")
+    rdf = serializers.CharField(required=True, help_text="RDF number of the employee")
     date = serializers.DateField(required=True, help_text="Date of the attendance")
     check_in = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
     check_out = serializers.TimeField(required=False, default=None, help_text="Check out time of the employee")
@@ -32,7 +32,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                     validated_data['is_present'] = True
                     validated_data['in_time'] = check_in
                     validated_data['date'] = date
-                    employee = Employees.objects.get(rdf_number=rdf)
+                    employee = Employee.objects.get(rdf_number=rdf)
                     return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:
@@ -70,7 +70,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
     def _create_employee(rdf, validated_data):
         validated_data['is_present'] = True
         validated_data['in_time'] = validated_data.pop('check_in')
-        employee = Employees.objects.get(rdf_number=rdf)
+        employee = Employee.objects.get(rdf_number=rdf)
         validated_data.pop('check_out')
         return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
 

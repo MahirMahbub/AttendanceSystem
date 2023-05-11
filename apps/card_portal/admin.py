@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from apps.card_portal.models import Employees, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
+from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
 
 
 class EmployeesImageAdminInline(admin.TabularInline):
@@ -46,7 +46,7 @@ class EmployeesDailyAttendanceAdminInline(admin.TabularInline):
         return False
 
 
-@admin.register(Employees)
+@admin.register(Employee)
 class EmployeesAdmin(admin.ModelAdmin):
     list_display = (
         'first_name', 'last_name', 'email', 'phone_number', 'address', 'district', 'division', 'post_code',
