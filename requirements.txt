@@ -10,6 +10,7 @@ psycopg2-binary==2.9.5
 pyrsistent==0.19.3
 pytz==2022.7.1
 PyYAML==6.0
+Pillow==9.4.0
 sqlparse==0.4.3
 tzdata==2022.7
 uritemplate==4.1.1
