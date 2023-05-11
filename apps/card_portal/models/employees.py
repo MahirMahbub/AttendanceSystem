@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.safestring import mark_safe
 
+
 from utils.mixins import BaseModelMixin
 
 
@@ -8,6 +9,7 @@ class Employee(BaseModelMixin):
     """
     Employees model
     """
+
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
     email = models.EmailField()
@@ -66,13 +68,18 @@ class EmployeesDailyAttendance(BaseModelMixin):
     """
     Employees daily attendance model
     """
+    from apps.card_portal.models.machines import Machine
+
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     date = models.DateField()
     in_time = models.TimeField()
     out_time = models.TimeField(null=True, blank=True)
     is_present = models.BooleanField(default=True)
+    machine = models.ForeignKey(Machine, on_delete=models.DO_NOTHING, null=True, blank=True)
 
     def __str__(self):
         return "ID: " + str(self.id) + ", EMPLOYEE_ID: " + str(
             self.employee.id) + ", DATE: " + str(self.date) + ", IS_PRESENT: " + str(
             self.is_present)
+
+
