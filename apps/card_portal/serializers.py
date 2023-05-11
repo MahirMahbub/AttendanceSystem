@@ -26,7 +26,11 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
             if last_attendance.in_time is not None and last_attendance.out_time is not None:
                 if check_out is not None:
                     response = serializers.ValidationError({"message": "Check-in should be done first"})
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
+                    raise response
+                if check_in < last_attendance.out_time and date <= last_attendance.date:
+                    response = serializers.ValidationError(
+                        {"message": "Check-in time must be greater than check-out time of last attendance"})
                     raise response
                 if check_in is not None:
                     validated_data['is_present'] = True
@@ -37,7 +41,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:
                     response = serializers.ValidationError({"message": "Check-in already done"})
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
                     raise response
             if check_out is not None:
                 if last_attendance.out_time is None:
@@ -50,7 +54,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                 else:
                     response = serializers.ValidationError({"message": "Check-out already done"},
                                                            code=status.HTTP_201_CREATED)
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
                     raise response
         else:
             if validated_data.get('check_in') is None:
@@ -75,15 +79,16 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
 
     def to_representation(self, instance):
+        instance.name = instance.employee.first_name + " " + instance.employee.last_name
         serializer = EmployeesDailyAttendanceSerializer(instance)
         return serializer.data
 
 
-class EmployeesDailyAttendanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmployeesDailyAttendance
-        fields = '__all__'
-
+class EmployeesDailyAttendanceSerializer(serializers.Serializer): # noqa
+    name = serializers.CharField(required=True, help_text="Name of the employee")
+    date = serializers.DateField(required=False, default=None, help_text="Date of the attendance")
+    in_time = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
+    out_time = serializers.TimeField(required=False, default=None, help_text="Check out time of the employee")
 
 class MessageSerializer(serializers.Serializer):  # noqa
     message = serializers.CharField(default="<some message>")

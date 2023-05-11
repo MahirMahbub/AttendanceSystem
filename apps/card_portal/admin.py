@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance
+from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance, Machine, \
+    MachinePermittedEmployee
 
 
 class EmployeesImageAdminInline(admin.TabularInline):
@@ -99,3 +100,42 @@ class EmployeesDailyAttendanceAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+class MachineAdminInline(admin.TabularInline):
+    fk_name = "employee"
+    model = Machine
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 0
+        if obj:
+            return extra
+        return extra
+
+
+class EmployeesMachineAdminInline(admin.TabularInline):
+    fk_name = "machine"
+    model = MachinePermittedEmployee
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 0
+        if obj:
+            return extra
+        return extra
+
+
+@admin.register(Machine)
+class MachineAdmin(admin.ModelAdmin):
+    list_display = ('model', 'manufacturer')
+    list_filter = ('model', 'manufacturer')
+    search_fields = ('model', 'manufacturer')
+    inlines = [EmployeesMachineAdminInline]
+
+
+@admin.register(MachinePermittedEmployee)
+class MachinePermittedEmployeeAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'machine', 'start_date', 'expiry_date')
+    list_filter = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'machine__model', 'start_date', 'expiry_date')
+    search_fields = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'machine__model', 'start_date', 'expiry_date')

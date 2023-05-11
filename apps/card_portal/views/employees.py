@@ -15,6 +15,7 @@ class EmployeesDailyAttendanceViewSet(viewsets.ModelViewSet):
     @extend_schema(
         request=EmployeesDailyAttendanceCreationSerializer,
         responses={201: EmployeesDailyAttendanceSerializer,
+                   200: MessageSerializer,
                    400: MessageSerializer},
     )
     def create(self, request):
