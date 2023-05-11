@@ -1,10 +1,10 @@
 from rest_framework import serializers, status
 
-from apps.card_portal.models import EmployeesDailyAttendance, Employees
+from apps.card_portal.models import EmployeesDailyAttendance, Employee
 
 
 class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noqa
-    rdf = serializers.IntegerField(required=True, help_text="RDF number of the employee")
+    rdf = serializers.CharField(required=True, help_text="RDF number of the employee")
     date = serializers.DateField(required=True, help_text="Date of the attendance")
     check_in = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
     check_out = serializers.TimeField(required=False, default=None, help_text="Check out time of the employee")
@@ -26,18 +26,22 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
             if last_attendance.in_time is not None and last_attendance.out_time is not None:
                 if check_out is not None:
                     response = serializers.ValidationError({"message": "Check-in should be done first"})
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
+                    raise response
+                if check_in < last_attendance.out_time and date <= last_attendance.date:
+                    response = serializers.ValidationError(
+                        {"message": "Check-in time must be greater than check-out time of last attendance"})
                     raise response
                 if check_in is not None:
                     validated_data['is_present'] = True
                     validated_data['in_time'] = check_in
                     validated_data['date'] = date
-                    employee = Employees.objects.get(rdf_number=rdf)
+                    employee = Employee.objects.get(rdf_number=rdf)
                     return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:
                     response = serializers.ValidationError({"message": "Check-in already done"})
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
                     raise response
             if check_out is not None:
                 if last_attendance.out_time is None:
@@ -50,7 +54,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                 else:
                     response = serializers.ValidationError({"message": "Check-out already done"},
                                                            code=status.HTTP_201_CREATED)
-                    response.status_code = status.HTTP_201_CREATED
+                    response.status_code = status.HTTP_200_OK
                     raise response
         else:
             if validated_data.get('check_in') is None:
@@ -70,20 +74,21 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
     def _create_employee(rdf, validated_data):
         validated_data['is_present'] = True
         validated_data['in_time'] = validated_data.pop('check_in')
-        employee = Employees.objects.get(rdf_number=rdf)
+        employee = Employee.objects.get(rdf_number=rdf)
         validated_data.pop('check_out')
         return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
 
     def to_representation(self, instance):
+        instance.name = instance.employee.first_name + " " + instance.employee.last_name
         serializer = EmployeesDailyAttendanceSerializer(instance)
         return serializer.data
 
 
-class EmployeesDailyAttendanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmployeesDailyAttendance
-        fields = '__all__'
-
+class EmployeesDailyAttendanceSerializer(serializers.Serializer): # noqa
+    name = serializers.CharField(required=True, help_text="Name of the employee")
+    date = serializers.DateField(required=False, default=None, help_text="Date of the attendance")
+    in_time = serializers.TimeField(required=False, default=None, help_text="Check in time of the employee")
+    out_time = serializers.TimeField(required=False, default=None, help_text="Check out time of the employee")
 
 class MessageSerializer(serializers.Serializer):  # noqa
     message = serializers.CharField(default="<some message>")

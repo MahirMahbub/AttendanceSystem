@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from utils.mixins import BaseModelMixin
 
 
-class Employees(BaseModelMixin):
+class Employee(BaseModelMixin):
     """
     Employees model
     """
@@ -32,7 +32,7 @@ class EmployeesDesignation(BaseModelMixin):
     """
     Employees designation model
     """
-    employee = models.ForeignKey(Employees, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     designation = models.CharField(max_length=128)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
@@ -48,7 +48,7 @@ class EmployeesImage(BaseModelMixin):
     """
     Employees image model
     """
-    employee = models.ForeignKey(Employees, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     image = models.ImageField(upload_to="employees/images/")
 
     def image_tag(self):
@@ -66,7 +66,7 @@ class EmployeesDailyAttendance(BaseModelMixin):
     """
     Employees daily attendance model
     """
-    employee = models.ForeignKey(Employees, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     date = models.DateField()
     in_time = models.TimeField()
     out_time = models.TimeField(null=True, blank=True)
