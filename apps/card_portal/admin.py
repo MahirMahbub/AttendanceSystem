@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance, Machine, \
-    MachinePermittedEmployee
+    MachinePermittedEmployee, EmployeeAccessCardUsageLog
 
 
 class EmployeesImageAdminInline(admin.TabularInline):
@@ -139,3 +139,24 @@ class MachinePermittedEmployeeAdmin(admin.ModelAdmin):
         'employee__first_name', 'employee__last_name', 'employee__email', 'machine__model', 'start_date', 'expiry_date')
     search_fields = (
         'employee__first_name', 'employee__last_name', 'employee__email', 'machine__model', 'start_date', 'expiry_date')
+
+
+@admin.register(EmployeeAccessCardUsageLog)
+class EmployeeAccessCardUsageLogAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'machine', 'date', 'access_type', 'time')
+    list_filter = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type'
+    )
+    search_fields = (
+        'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type'
+    )
+    # readonly_fields = ('employee', 'machine', 'access_card_number', 'access_card_type', 'access_time')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
