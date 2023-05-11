@@ -1,4 +1,5 @@
 # AttendanceSystem
+An IoT Based Attendance System and Access Management System
 * Create a python virtual environment.
 * Active the python virtual environment. 
 * Run "pip install -r requirements.txt"
