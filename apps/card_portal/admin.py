@@ -72,7 +72,6 @@ class EmployeesDesignationAdmin(admin.ModelAdmin):
         'employee__first_name', 'employee__last_name', 'employee__email', 'designation', 'start_date', 'end_date',
         'is_active'
     )
-    readonly_fields = ('employee',)
 
 
 @admin.register(EmployeesImage)
@@ -80,7 +79,7 @@ class EmployeesImageAdmin(admin.ModelAdmin):
     list_display = ('employee', 'image', 'image_tag')
     list_filter = ('employee__first_name', 'employee__last_name', 'employee__email',)
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__email',)
-    readonly_fields = ('image_tag', 'employee',)
+    readonly_fields = ('image_tag',)
 
 
 @admin.register(EmployeesDailyAttendance)
