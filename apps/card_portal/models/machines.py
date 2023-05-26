@@ -1,7 +1,4 @@
-from datetime import datetime, date
-
 from django.db import models
-
 
 from utils.mixins import BaseModelMixin
 
@@ -14,6 +11,10 @@ class Machine(BaseModelMixin):
     model = models.CharField(max_length=128, null=True, blank=True)
     manufacturer = models.CharField(max_length=128, null=True, blank=True)
     employee = models.ManyToManyField(Employee, related_name='machine', through='MachinePermittedEmployee')
+
+    def __str__(self):
+        return "ID: " + str(self.id) + ", Model: " + str(
+            self.model)
 
 
 class MachinePermittedEmployee(BaseModelMixin):
