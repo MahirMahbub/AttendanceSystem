@@ -1,6 +1,9 @@
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import update_last_login
 from rest_framework import serializers, status
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from apps.card_portal.models import EmployeesDailyAttendance, Employee, EmployeeAccessCardUsageLog
+from apps.card_portal.models import EmployeesDailyAttendance, Employee, EmployeeAccessCardUsageLog, Machine
 
 
 class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noqa
@@ -166,3 +169,28 @@ class EmployeesDailyAttendanceSerializer(serializers.Serializer):  # noqa
 
 class MessageSerializer(serializers.Serializer):  # noqa
     message = serializers.CharField(default="<some message>")
+
+
+class MachineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Machine
+        fields = ['email', 'password']
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = {}
+        self.user = Machine.objects.get(email=attrs['email'])
+        if not check_password(attrs['password'], self.user.password):
+            raise serializers.ValidationError({"message": "Invalid Password"})
+        refresh = self.get_token(self.user)
+
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+        update_last_login(None, self.user)
+        # refresh = self.get_token(self.user)
+        #
+        # # assign token
+        # data['refresh'] = str(refresh)
+        # data['access'] = str(refresh.access_token)
+        return data

@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance, Machine, \
-    MachinePermittedEmployee, EmployeeAccessCardUsageLog
+    MachinePermittedEmployee, EmployeeAccessCardUsageLog, GenericUser
 
-
+# admin.site.register(GenericUser, UserAdmin)
 class EmployeesImageAdminInline(admin.TabularInline):
     fk_name = "employee"
     model = EmployeesImage
@@ -128,6 +128,7 @@ class MachineAdmin(admin.ModelAdmin):
     list_display = ('model', 'manufacturer')
     list_filter = ('model', 'manufacturer')
     search_fields = ('model', 'manufacturer')
+    # readonly_fields = ('last_login',)
     inlines = [EmployeesMachineAdminInline]
 
 
