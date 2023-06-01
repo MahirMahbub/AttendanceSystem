@@ -150,7 +150,7 @@ void sendAPIRequest(String rdf, String date, String checkIn, String uniqueId) {
   if (client.connect(serverHost, serverPort)) {
     http.begin(client, serverURL);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "zsTqH59bu1fC7VEGop4oO2v85Lp8vu2oYT3Y6Gwh3EcfDgW5kPw85OODQauxVtP6"); // Replace with your authentication token
+//     http.addHeader("Authorization", "zsTqH59bu1fC7VEGop4oO2v85Lp8vu2oYT3Y6Gwh3EcfDgW5kPw85OODQauxVtP6"); // Replace with your authentication token
 
     int httpResponseCode = http.POST(requestBody);
 
