@@ -17,7 +17,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.card_portal.views.employees import MyTokenObtainPairView
 from config import settings
 
 urlpatterns = [
@@ -29,6 +31,8 @@ urlpatterns = [
         "docs/",
         SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('v1/api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v1/api/token/refresh/', MyTokenObtainPairView.as_view(), name='token_refresh'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
