@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from pathlib import Path
+from typing import List
 
 import environ
 
@@ -22,7 +23,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     DATABASE_ENGINE=(str, 'django.db.backends.sqlite3'),
     DATABASE_NAME=(str, 'db.sqlite3'),
-    ALLOWED_HOSTS=(list[str], ['*']),
+    ALLOWED_HOSTS=(List[str], ['*']),
     SECRET_KEY=(str, 'django-insecure-kaphb42(#p_faq-9s$qm(v$^d=dh@m8+foe+h6#$q5-6$=&y!@'),
     PAGE_SIZE=(int, 10),
 )
