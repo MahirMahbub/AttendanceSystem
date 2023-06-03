@@ -23,7 +23,7 @@ class EmployeesDailyAttendanceViewSet(viewsets.ModelViewSet):
     queryset = EmployeesDailyAttendance.objects.all()
     http_method_names = ['post']
 
-    # permission_classes = [MachineIsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         request=EmployeesDailyAttendanceCreationSerializer,

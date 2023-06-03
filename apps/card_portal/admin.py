@@ -93,7 +93,7 @@ class EmployeesDailyAttendanceAdmin(admin.ModelAdmin):
         'employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time', 'is_present'
     )
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time')
-    readonly_fields = ('created_at', 'updated_at', 'date', 'in_time', 'out_time', 'employee', 'is_present', "employee")
+    readonly_fields = ('created_at', 'updated_at', 'date', 'in_time', 'out_time', 'employee', 'is_present')
 
     def has_add_permission(self, request):
         return False
@@ -150,8 +150,8 @@ class UserChangeForm(ModelForm):
 
 @admin.register(Machine)
 class MachineAdmin(admin.ModelAdmin):
-    form = UserChangeForm
-    add_form = UserChangeForm
+    # form = UserChangeForm
+    # add_form = UserChangeForm
     list_display = ('model', 'manufacturer')
     list_filter = ('model', 'manufacturer')
     search_fields = ('model', 'manufacturer')

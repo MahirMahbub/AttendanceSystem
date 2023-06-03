@@ -1,7 +1,8 @@
 from datetime import date
-
+import traceback
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import update_last_login
+from django.db import transaction, DatabaseError
 from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -23,6 +24,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         return attrs
 
     def create(self, validated_data):
+        context = self.context['request']
         _date: date = timezone.now().astimezone(tz=timezone.get_current_timezone()).date()
         current_time = timezone.now().astimezone(tz=timezone.get_current_timezone()).time()
         last_attendance = EmployeesDailyAttendance.objects.filter(
@@ -31,48 +33,58 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         ).last()
 
         # TODO: Check if the employee is permitted to use the machine
-        machine = None
+        machine = context.user
+        employee = Employee.objects.filter(rdf_number=validated_data['rdf']).first()
+        if employee is None:
+            raise serializers.ValidationError({"message": "Employee not found"})
+        if machine.machinepermittedemployee_set.filter(employee=employee).first() is None:
+            raise serializers.ValidationError({"message": "Access Denied. Employee is not permitted to use this machine"})
 
         if last_attendance is not None:
             check_in, check_out, rdf = self._extract_attendance_data_from_validated_data(validated_data)
             if last_attendance.in_time is not None and last_attendance.out_time is not None:
-                if check_out is not None:
-                    self._create_access_card_log(
-                        employee=last_attendance.employee,
-                        _date=_date,
-                        time=current_time,
-                        access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_OUT,
-                        machine=machine,
-                        success=True
-                    )
-                    response = serializers.ValidationError({"message": "Check-in should be done first"})
-                    response.status_code = status.HTTP_200_OK
-                    raise response
-                if current_time < last_attendance.out_time and _date <= last_attendance.date:
-                    self._create_access_card_log(
-                        employee=last_attendance.employee,
-                        _date=_date,
-                        time=current_time,
-                        access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
-                        machine=machine,
-                        success=False
-                    )
-                    response = serializers.ValidationError(
-                        {"message": "Check-in time must be greater than check-out time of last attendance"})
-                    raise response
-                if check_in is not None:
-                    validated_data['is_present'] = True
-                    validated_data['in_time'] = current_time
-                    employee = Employee.objects.get(rdf_number=rdf)
-                    self._create_access_card_log(
-                        employee=last_attendance.employee,
-                        _date=_date,
-                        time=current_time,
-                        access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
-                        machine=machine,
-                        success=True
-                    )
-                    return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
+                try:
+                    with transaction.atomic():
+                        if check_out is not None:
+                            self._create_access_card_log(
+                                employee=last_attendance.employee,
+                                _date=_date,
+                                time=current_time,
+                                access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_OUT,
+                                machine=machine,
+                                success=True
+                            )
+                            response = serializers.ValidationError({"message": "Check-in should be done first"})
+                            response.status_code = status.HTTP_200_OK
+                            raise response
+                        if current_time < last_attendance.out_time and _date <= last_attendance.date:
+                            self._create_access_card_log(
+                                employee=last_attendance.employee,
+                                _date=_date,
+                                time=current_time,
+                                access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
+                                machine=machine,
+                                success=False
+                            )
+                            response = serializers.ValidationError(
+                                {"message": "Check-in time must be greater than check-out time of last attendance"})
+                            raise response
+                        if check_in is not None:
+                            validated_data['is_present'] = True
+                            validated_data['in_time'] = current_time
+                            employee = Employee.objects.get(rdf_number=rdf)
+                            self._create_access_card_log(
+                                employee=last_attendance.employee,
+                                _date=_date,
+                                time=current_time,
+                                access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
+                                machine=machine,
+                                success=True
+                            )
+                            return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
+                except DatabaseError as db_exec:
+                    print(traceback.format_exc())
+                    raise serializers.ValidationError({"message": "Check-in failed"})
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:
                     response = serializers.ValidationError({"message": "Check-in already done"})
@@ -118,7 +130,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         else:
             if validated_data.get('check_in') is None:
                 check_in, check_out, rdf = self._extract_attendance_data_from_validated_data(validated_data)
-                employee = Employee.objects.get(rdf_number=rdf)
+                employee = Employee.objects.filter(rdf_number=rdf).first()
                 self._create_access_card_log(
                     employee=employee,
                     _date=_date,
@@ -129,17 +141,26 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                 )
                 raise serializers.ValidationError({"message": "Check-in is required"})
             rdf = validated_data.pop('rdf')
-            employee = Employee.objects.get(rdf_number=rdf)
-            employee_daily_attendance = self._create_employee(rdf, validated_data, current_time, _date)
-            if employee_daily_attendance is not None:
-                self._create_access_card_log(
-                    employee=employee,
-                    _date=_date,
-                    time=current_time,
-                    access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
-                    machine=machine,
-                    success=True
-                )
+            employee = Employee.objects.filter(rdf_number=rdf).first()
+            if employee is None:
+                raise serializers.ValidationError({"message": "Employee not found"})
+            try:
+                with transaction.atomic():
+                    employee_daily_attendance = self._create_employee_attendance(rdf, validated_data, current_time,
+                                                                                 _date, machine)
+                    if employee_daily_attendance is not None:
+                        self._create_access_card_log(
+                            employee=employee,
+                            _date=_date,
+                            time=current_time,
+                            access_type=EmployeeAccessCardUsageLog.AccessType.SIGN_IN,
+                            machine=machine,
+                            success=True
+                        )
+            except DatabaseError:
+                traceback.print_exc()
+                raise serializers.ValidationError({"message": "Check-in failed. Contact the admin"})
+
             return employee_daily_attendance
 
     @staticmethod
@@ -161,10 +182,11 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         )
 
     @staticmethod
-    def _create_employee(rdf, validated_data, current_time, _date):
+    def _create_employee_attendance(rdf, validated_data, current_time, _date, machine):
         validated_data['is_present'] = True
         validated_data['in_time'] = current_time
         validated_data['date'] = _date
+        validated_data['machine'] = machine
         employee = Employee.objects.get(rdf_number=rdf)
         validated_data.pop('check_out')
         validated_data.pop('check_in')
@@ -197,7 +219,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):  # noqa
 
     def validate(self, attrs):
         data = {}
-        self.user = Machine.objects.get(email=attrs['email'])  # noqa
+        self.user = Machine.objects.filter(email=attrs['email']).first()  # noqa
+        if self.user is None:
+            raise serializers.ValidationError({"message": "Invalid Email, Machine not found"})
         if not check_password(attrs['password'], self.user.password):
             raise serializers.ValidationError({"message": "Invalid Password"})
         refresh = self.get_token(self.user)
