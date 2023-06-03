@@ -1,15 +1,11 @@
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from typing import Set
-
-from django.contrib.auth import get_user_model
 from django.db import models
-from rest_framework import authentication, HTTP_HEADER_ENCODING
+from django.utils.translation import gettext_lazy as _
+from drf_spectacular.contrib.rest_framework_simplejwt import SimpleJWTScheme
+from rest_framework import HTTP_HEADER_ENCODING
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, TokenError, InvalidToken
 from rest_framework_simplejwt.settings import api_settings
-
-from django.utils.translation import gettext_lazy as _
-
-
+from typing import Set
 
 
 class TimeStampModelMixin(models.Model):
@@ -24,6 +20,7 @@ class BaseModelMixin(TimeStampModelMixin):
     class Meta:
         abstract = True
 
+
 AUTH_HEADER_TYPES = api_settings.AUTH_HEADER_TYPES
 
 if not isinstance(api_settings.AUTH_HEADER_TYPES, (list, tuple)):
@@ -32,6 +29,9 @@ if not isinstance(api_settings.AUTH_HEADER_TYPES, (list, tuple)):
 AUTH_HEADER_TYPE_BYTES: Set[bytes] = {
     h.encode(HTTP_HEADER_ENCODING) for h in AUTH_HEADER_TYPES
 }
+
+
+
 class JWTAuthentication_(JWTAuthentication):
     """
     An authentication plugin that authenticates requests through a JSON web
@@ -144,3 +144,6 @@ class JWTAuthentication_(JWTAuthentication):
             raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
 
         return user
+
+class SimpleJWTTokenUserScheme(SimpleJWTScheme):
+    target_class = JWTAuthentication_
