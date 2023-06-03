@@ -1,9 +1,13 @@
 from django.contrib import admin
+from django.contrib.auth.forms import AdminPasswordChangeForm, PasswordChangeForm, \
+    ReadOnlyPasswordHashField
+from django.forms import ModelForm
+from django.utils.translation import gettext_lazy as _
 
 from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance, Machine, \
-    MachinePermittedEmployee, EmployeeAccessCardUsageLog, GenericUser
+    MachinePermittedEmployee, EmployeeAccessCardUsageLog
 
-# admin.site.register(GenericUser, UserAdmin)
+
 class EmployeesImageAdminInline(admin.TabularInline):
     fk_name = "employee"
     model = EmployeesImage
@@ -123,13 +127,39 @@ class EmployeesMachineAdminInline(admin.TabularInline):
         return extra
 
 
+class UserChangeForm(ModelForm):
+    password = ReadOnlyPasswordHashField(
+        label=_("Password"),
+        help_text=_(
+            "Raw passwords are not stored, so there is no way to see this "
+            "user’s password, but you can change the password using "
+            '<a href=\"../password/\">this form</a>'
+        ),
+    )
+
+    class Meta:
+        model = Machine
+        fields = '__all__'
+
+    def clean_password(self):
+        # Regardless of what the user provides, return the initial value.
+        # This is done here, rather than on the field, because the
+        # field does not have access to the initial value
+        return self.initial["password"]
+
+
 @admin.register(Machine)
 class MachineAdmin(admin.ModelAdmin):
+    form = UserChangeForm
+    add_form = UserChangeForm
     list_display = ('model', 'manufacturer')
     list_filter = ('model', 'manufacturer')
     search_fields = ('model', 'manufacturer')
     # readonly_fields = ('last_login',)
     inlines = [EmployeesMachineAdminInline]
+
+
+    # change_password_form = PasswordChangeForm
 
 
 @admin.register(MachinePermittedEmployee)
@@ -150,7 +180,6 @@ class EmployeeAccessCardUsageLogAdmin(admin.ModelAdmin):
     search_fields = (
         'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type'
     )
-    # readonly_fields = ('employee', 'machine', 'access_card_number', 'access_card_type', 'access_time')
 
     def has_add_permission(self, request):
         return False

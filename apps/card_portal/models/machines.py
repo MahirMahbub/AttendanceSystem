@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from django.db import models
-from django.utils import timezone
-from apps.card_portal.models.user import AbstractUser, CallableUser
+
+from apps.card_portal.models.user import AbstractUser
 from utils.mixins import BaseModelMixin
 
 
@@ -14,13 +14,6 @@ class Machine(BaseModelMixin, AbstractUser):
     manufacturer = models.CharField(max_length=128, null=True, blank=True)
     employee = models.ManyToManyField(Employee, related_name='machine', through='MachinePermittedEmployee', blank=True)
 
-    # def save(self, *args, **kwargs):
-    #     now = timezone.now()
-    #     u = CallableUser(last_login=now)
-    #     u.set_password(self.password)
-    #     u.save()
-    #     self.callableuser_ptr_id = u.id
-    #     super().save(*args, **kwargs)
     def save(self, *args, **kwargs):
         # self.password =
         self.password = make_password(self.password)
