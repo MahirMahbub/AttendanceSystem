@@ -8,6 +8,7 @@ from apps.card_portal.models import EmployeesDailyAttendance
 from apps.card_portal.serializers import EmployeesDailyAttendanceCreationSerializer, EmployeesDailyAttendanceSerializer, \
     MessageSerializer, MyTokenObtainPairSerializer
 
+
 class MachineIsAuthenticated(BasePermission):
     """
     Allows access only to authenticated users.
@@ -16,10 +17,12 @@ class MachineIsAuthenticated(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user)
 
+
 class EmployeesDailyAttendanceViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeesDailyAttendanceCreationSerializer
     queryset = EmployeesDailyAttendance.objects.all()
     http_method_names = ['post']
+
     # permission_classes = [MachineIsAuthenticated]
 
     @extend_schema(
@@ -31,6 +34,7 @@ class EmployeesDailyAttendanceViewSet(viewsets.ModelViewSet):
     def create(self, request):
         # your non-standard behaviour
         return super().create(request)
+
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer

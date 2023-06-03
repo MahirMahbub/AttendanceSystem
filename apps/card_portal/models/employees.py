@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.safestring import mark_safe
 
-
 from utils.mixins import BaseModelMixin
 
 
@@ -81,5 +80,3 @@ class EmployeesDailyAttendance(BaseModelMixin):
         return "ID: " + str(self.id) + ", EMPLOYEE_ID: " + str(
             self.employee.id) + ", DATE: " + str(self.date) + ", IS_PRESENT: " + str(
             self.is_present)
-
-
