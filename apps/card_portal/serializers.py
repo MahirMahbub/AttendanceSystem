@@ -1,15 +1,17 @@
-from datetime import date
 import traceback
+from datetime import date
+
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import update_last_login
 from django.db import transaction, DatabaseError
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import logging
 
 from apps.card_portal.models import EmployeesDailyAttendance, Employee, EmployeeAccessCardUsageLog, Machine
-from django.utils import timezone
 
-
+logger = logging.getLogger(__name__)
 class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noqa
     rdf = serializers.CharField(required=True, help_text="RDF number of the employee")
     # date = serializers.DateField(required=True, help_text="Date of the attendance")
@@ -37,8 +39,12 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
         employee = Employee.objects.filter(rdf_number=validated_data['rdf']).first()
         if employee is None:
             raise serializers.ValidationError({"message": "Employee not found"})
-        if machine.machinepermittedemployee_set.filter(employee=employee).first() is None:
-            raise serializers.ValidationError({"message": "Access Denied. Employee is not permitted to use this machine"})
+        machine_permitted_employee = machine.machinepermittedemployee_set.filter(employee=employee).first()
+        if machine_permitted_employee is None:
+            raise serializers.ValidationError(
+                {"message": "Access Denied. Employee is not permitted to use this machine"})
+        if machine_permitted_employee.expiry_date is not None and machine_permitted_employee.expiry_date < _date:
+            raise serializers.ValidationError({"message": "Access Denied. Employee is not expired to use this machine"})
 
         if last_attendance is not None:
             check_in, check_out, rdf = self._extract_attendance_data_from_validated_data(validated_data)
@@ -83,7 +89,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                             )
                             return EmployeesDailyAttendance.objects.create(employee=employee, **validated_data)
                 except DatabaseError as db_exec:
-                    print(traceback.format_exc())
+                    logger.error(traceback.format_exc())
                     raise serializers.ValidationError({"message": "Check-in failed"})
             if check_in is not None:
                 if last_attendance.in_time is not None and last_attendance.out_time is None:

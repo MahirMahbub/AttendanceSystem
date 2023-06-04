@@ -33,3 +33,7 @@ class MachinePermittedEmployee(BaseModelMixin):
     machine = models.ForeignKey(Machine, on_delete=models.CASCADE, null=True, blank=True)
     start_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return "ID: " + str(self.id) + ", EMPLOYEE_ID: " + str(
+            self.employee.id) + ", MACHINE_ID: " + str(self.machine.id)
