@@ -1,8 +1,12 @@
+from datetime import datetime
+
 from django.contrib import admin
-from django.contrib.auth.forms import AdminPasswordChangeForm, PasswordChangeForm, \
-    ReadOnlyPasswordHashField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.forms import ModelForm
+from django.utils import timezone
+from django.utils.datetime_safe import date
 from django.utils.translation import gettext_lazy as _
+from rangefilter.filters import DateRangeFilterBuilder
 
 from apps.card_portal.models import Employee, EmployeesDesignation, EmployeesImage, EmployeesDailyAttendance, Machine, \
     MachinePermittedEmployee, EmployeeAccessCardUsageLog
@@ -88,12 +92,19 @@ class EmployeesImageAdmin(admin.ModelAdmin):
 
 @admin.register(EmployeesDailyAttendance)
 class EmployeesDailyAttendanceAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'date', 'in_time', 'out_time', 'is_present')
+    list_display = ('employee', 'date', 'in_time', 'out_time', 'is_present', 'total_time')
     list_filter = (
-        'employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time', 'is_present'
+        'employee__first_name', 'employee__last_name', 'employee__email', ('date', DateRangeFilterBuilder()), 'in_time', 'out_time', 'is_present'
     )
     search_fields = ('employee__first_name', 'employee__last_name', 'employee__email', 'date', 'in_time', 'out_time')
-    readonly_fields = ('created_at', 'updated_at', 'date', 'in_time', 'out_time', 'employee', 'is_present')
+    readonly_fields = ('created_at', 'updated_at', 'employee', 'is_present')
+
+    @staticmethod
+    def total_time(obj: EmployeesDailyAttendance)->datetime:
+        return datetime.combine(date.today(), obj.out_time) - datetime.combine(date.today(), obj.in_time) \
+            if obj.out_time else \
+            timezone.now().astimezone(tz=timezone.get_current_timezone()).replace(tzinfo=None) - datetime.combine(
+                date.today(), obj.in_time)
 
     def has_add_permission(self, request):
         return False
@@ -158,13 +169,12 @@ class MachineAdmin(admin.ModelAdmin):
     # readonly_fields = ('last_login',)
     inlines = [EmployeesMachineAdminInline]
 
-
     # change_password_form = PasswordChangeForm
 
 
 @admin.register(MachinePermittedEmployee)
 class MachinePermittedEmployeeAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'machine', 'start_date', 'expiry_date')
+    list_display = ('employee', 'machine', 'start_date', 'expiry_date', 'start_date')
     list_filter = (
         'employee__first_name', 'employee__last_name', 'employee__email', 'machine__model', 'start_date', 'expiry_date')
     search_fields = (
@@ -175,10 +185,10 @@ class MachinePermittedEmployeeAdmin(admin.ModelAdmin):
 class EmployeeAccessCardUsageLogAdmin(admin.ModelAdmin):
     list_display = ('employee', 'machine', 'date', 'access_type', 'time')
     list_filter = (
-        'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type'
+        'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type', ('date', DateRangeFilterBuilder())
     )
     search_fields = (
-        'employee__first_name', 'employee__last_name', 'employee__email', 'machine', 'access_type'
+        'employee__first_name', 'employee__last_name', 'employee__email'
     )
 
     def has_add_permission(self, request):
@@ -189,3 +199,5 @@ class EmployeeAccessCardUsageLogAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+# @admin.register(EmployeeWorkLog)
