@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False),
+    DEBUG=(bool, True),
     DATABASE_ENGINE=(str, 'django.db.backends.sqlite3'),
     DATABASE_NAME=(str, 'db.sqlite3'),
     ALLOWED_HOSTS=(list[str], ['*']),

@@ -11,8 +11,9 @@
 
 const char* ssid = "Sadia";
 const char* password = "12345678";
-const char* serverURL = "http://192.168.207.199:8000/v1/api/card/employees_attendance/";
-const char* serverHost = "192.168.207.199";
+const char* serverURL = "http://192.168.252.199:8000/v1/api/card/employees_attendance/";
+const char* serverHost = "192.168.252.199";
+const char* tokenUrl = "http://192.168.252.199:8000/v1/api/token/";
 const int serverPort = 8000;
 
 #define RST_PIN         D3
@@ -58,19 +59,19 @@ void loop() {
 
     if (!uid.isEmpty()) {
       lcd.clear();
-      
-     
+
+
 
       if (isUidAllowed(uid)) {
           String studentName = allowedStudents[uid];
 
-    
+
       lcd.print("Name: ");
       lcd.setCursor(4, 0);
       lcd.print(studentName); // Print student name on LCD
       lcd.setCursor(0, 1);
       lcd.print("Access granted!");
-      Serial.println("Access granted!"); 
+      Serial.println("Access granted!");
       openDoor();
 
         // Get current date and time
@@ -91,7 +92,7 @@ void loop() {
         lcd.setCursor(0, 1);
         lcd.print("Access denied!"); // Display message on LCD
         Serial.println("Access denied!"); // Print message on serial monitor
-        
+
       }
 
       delay(500);
@@ -128,31 +129,57 @@ void closeDoor() {
 
 void sendAPIRequest(String rdf, String date, String checkIn, String uniqueId) {
   WiFiClient client;
-  
+
   HTTPClient http;
 
-  DynamicJsonDocument jsonDoc(256);
+  DynamicJsonDocument jsonDoc(256), attendenceJson(256);
+  attendenceJson["email"] = "one@machine.com" ;
+  attendenceJson["password"] = "machine1";
+  //attendence api call
   jsonDoc["rdf"] = rdf;
-  jsonDoc["date"] = date;
-  jsonDoc["check_in"] = checkIn;
-  if (!checkIn.isEmpty()) {
-    jsonDoc["string"] = checkIn;
-  }
-//  if (!checkOut.isEmpty()) {
-//    jsonDoc["string"] = checkOut;
+//  jsonDoc["date"] = date;
+  jsonDoc["check_in"] = true;
+//  if (!checkIn.isEmpty()) {
+//    jsonDoc["string"] = checkIn;
 //  }
-  jsonDoc["797bfb06"] = uniqueId;
-  String requestBody;
-  serializeJson(jsonDoc, requestBody);
+  //  jsonDoc["797bfb06"] = uniqueId;
+  String requestBody, tokenRequestBody;
 
-  Serial.println("Sending API request...");
+  // serializing json
+  serializeJson(attendenceJson, tokenRequestBody);
+  serializeJson(jsonDoc, requestBody);
+  DynamicJsonDocument tokenResponseDoc(1028);
 
   if (client.connect(serverHost, serverPort)) {
+    //calling token api
+    http.begin(client, tokenUrl);
+    Serial.println("Sending API request...");
+    http.addHeader("Content-Type", "application/json");
+
+
+    int httpResponseCode = http.POST(tokenRequestBody);
+    Serial.println("Sending Token API request...");
+    Serial.println(httpResponseCode);
+    if (httpResponseCode == 200) {
+      Serial.print("Token API response code: ");
+      Serial.println(httpResponseCode);
+
+      String tokenResponseBody = http.getString();
+      Serial.println("API token response body:");
+//      Serial.println(tokenResponseBody);
+
+
+      deserializeJson(tokenResponseDoc, tokenResponseBody);
+      Serial.println("Bearer "+ tokenResponseDoc["access"].as<String>());
+
+    }
+
+    HTTPClient http;
     http.begin(client, serverURL);
     http.addHeader("Content-Type", "application/json");
-//     http.addHeader("Authorization", "zsTqH59bu1fC7VEGop4oO2v85Lp8vu2oYT3Y6Gwh3EcfDgW5kPw85OODQauxVtP6"); // Replace with your authentication token
+    http.addHeader("Authorization", "Bearer "+ tokenResponseDoc["access"].as<String>()); // Replace with your authentication token
 
-    int httpResponseCode = http.POST(requestBody);
+    httpResponseCode = http.POST(requestBody);
 
     if (httpResponseCode > 0) {
       Serial.print("API response code: ");
@@ -164,6 +191,8 @@ void sendAPIRequest(String rdf, String date, String checkIn, String uniqueId) {
 
       DynamicJsonDocument responseDoc(256);
       deserializeJson(responseDoc, responseBody);
+      Serial.println("Response Body: ");
+      Serial.println(responseBody);
 
       if (httpResponseCode == 201) {
         String name = responseDoc["name"].as<String>();
