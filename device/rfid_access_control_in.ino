@@ -27,11 +27,6 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 Servo doorServo;
 LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
 
-std::map<String, String> allowedStudents = {
-  {"797bfb06", ": Dr. Mahfuzul"}
-  //{"89f29006", ": Alina"}
-};
-
 String readRFID() {
   String uid = "";
 
@@ -68,12 +63,7 @@ void sendAPIRequest(String rdf) {
   attendenceJson["password"] = "machine1";
   //attendence api call
   jsonDoc["rdf"] = rdf;
-//  jsonDoc["date"] = date;
   jsonDoc["check_in"] = true;
-//  if (!checkIn.isEmpty()) {
-//    jsonDoc["string"] = checkIn;
-//  }
-  //  jsonDoc["797bfb06"] = uniqueId;
   String requestBody, tokenRequestBody;
 
   // serializing json
@@ -97,12 +87,9 @@ void sendAPIRequest(String rdf) {
 
       String tokenResponseBody = http.getString();
       Serial.println("API token response body:");
-//      Serial.println(tokenResponseBody);
-
 
       deserializeJson(tokenResponseDoc, tokenResponseBody);
       Serial.println("Bearer "+ tokenResponseDoc["access"].as<String>());
-
     }
 
     HTTPClient http;
@@ -193,35 +180,7 @@ void loop() {
 
     if (!uid.isEmpty()) {
       lcd.clear();
-
-
-
-  //      if (isUidAllowed(uid)) {
-  //          String studentName = allowedStudents[uid];
-  //
-  //
-  //      lcd.print("Name: ");
-  //      lcd.setCursor(4, 0);
-  //      lcd.print(studentName); // Print student name on LCD
-  //      lcd.setCursor(0, 1);
-  //      lcd.print("Access granted!");
-  //      Serial.println("Access granted!");
-  //      openDoor();
-
-        // Get current date and time
-//        String currentDate = "2023-05-09"; // Replace with actual date
-//        String currentTime = "23:12:55"; // Replace with actual time
-//
-//        // Generate unique ID
-//        DynamicJsonDocument uniqueIdDoc(128);
-//        uniqueIdDoc["cur_time"] = currentTime;
-//        uniqueIdDoc["m_id"] = "797bfb06"; // Replace with machine's unique ID
-//        String uniqueId;
-//        serializeJson(uniqueIdDoc, uniqueId);
-
         sendAPIRequest(uid);
-//        delay(1000);
-//        closeDoor();
       } else {
         lcd.setCursor(0, 1);
         lcd.print("Access denied!"); // Display message on LCD
