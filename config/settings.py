@@ -94,7 +94,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # "django.contrib.sites",
-'rangefilter',
+    'rangefilter',
     "django.contrib.postgres",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -102,7 +102,6 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.card_portal",
     "apps.face_portal",
-
 
 ]
 
@@ -263,3 +262,7 @@ LOGGING = {
         },
     },
 }
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
