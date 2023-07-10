@@ -78,6 +78,8 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
                         if check_in is not None:
                             validated_data['is_present'] = True
                             validated_data['in_time'] = current_time
+                            validated_data['date'] = _date
+                            validated_data['machine'] = machine
                             employee = Employee.objects.get(rdf_number=rdf)
                             self._create_access_card_log(
                                 employee=last_attendance.employee,
