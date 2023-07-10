@@ -44,7 +44,7 @@ class EmployeesDailyAttendanceCreationSerializer(serializers.Serializer):  # noq
             raise serializers.ValidationError(
                 {"message": "Access Denied. Employee is not permitted to use this machine"})
         if machine_permitted_employee.expiry_date is not None and machine_permitted_employee.expiry_date < _date:
-            raise serializers.ValidationError({"message": "Access Denied. Employee is not expired to use this machine"})
+            raise serializers.ValidationError({"message": "Access Denied. Employee is expired"})
 
         if last_attendance is not None:
             check_in, check_out, rdf = self._extract_attendance_data_from_validated_data(validated_data)
